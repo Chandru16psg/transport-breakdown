@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RoadHelp — Find Nearby Workshops</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --card:#ffffff; --text:#1a1f24; --muted:#5b6672;
+    --accent:#e8542a; --accent-dark:#c8431e; --border:#e2e6ea; --chip:#eef1f4;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171a; --card:#1e2226; --text:#eef1f4; --muted:#98a2ad;
+      --accent:#ff6a3d; --accent-dark:#e8542a; --border:#2c3136; --chip:#262b30;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171a; --card:#1e2226; --text:#eef1f4; --muted:#98a2ad;
+    --accent:#ff6a3d; --accent-dark:#e8542a; --border:#2c3136; --chip:#262b30;
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    min-height:100%;
+  }
+  header{
+    padding:22px 18px 18px; text-align:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+    color:#fff; padding-top:calc(22px + env(safe-area-inset-top,0px));
+  }
+  header h1{margin:0 0 4px; font-size:1.4rem;}
+  header p{margin:0; opacity:.9; font-size:.9rem;}
+  .wrap{max-width:640px; margin:0 auto; padding:16px;}
+  .search-card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:16px; margin-top:-26px; box-shadow:0 6px 20px rgba(0,0,0,.08);
+  }
+  label{font-size:.78rem; font-weight:600; color:var(--muted); display:block; margin:10px 0 5px;}
+  label:first-child{margin-top:0;}
+  input[type=text], select{
+    width:100%; padding:11px 12px; border-radius:9px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:.95rem;
+  }
+  input:focus, select:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  button.search-btn{
+    width:100%; margin-top:14px; padding:12px; border:none; border-radius:9px;
+    background:var(--accent); color:#fff; font-size:.98rem; font-weight:700;
+    cursor:pointer;
+  }
+  button.search-btn:active{background:var(--accent-dark);}
+  .sos{
+    display:flex; align-items:center; gap:8px; margin-top:10px; font-size:.78rem; color:var(--muted);
+  }
+  .sos a{color:var(--accent); font-weight:700; text-decoration:none;}
+  .results-meta{margin:18px 2px 8px; font-size:.85rem; color:var(--muted);}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:14px; margin-bottom:12px;
+  }
+  .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .card h3{margin:0 0 3px; font-size:1.02rem;}
+  .meta-line{font-size:.82rem; color:var(--muted); margin:2px 0;}
+  .rating{font-size:.8rem; color:var(--accent); font-weight:700; white-space:nowrap;}
+  .tags{display:flex; flex-wrap:wrap; gap:6px; margin:9px 0;}
+  .tag{background:var(--chip); color:var(--muted); font-size:.72rem; padding:3px 9px; border-radius:99px;}
+  .actions{display:flex; gap:8px; margin-top:10px;}
+  .actions a{
+    flex:1; text-align:center; padding:9px 0; border-radius:8px; font-size:.85rem;
+    text-decoration:none; font-weight:600;
+  }
+  .call{background:var(--accent); color:#fff;}
+  .dir{background:var(--chip); color:var(--text); border:1px solid var(--border);}
+  .empty{text-align:center; color:var(--muted); padding:30px 10px; font-size:.9rem;}
+  .note{
+    margin-top:22px; padding:12px 14px; border-radius:10px; background:var(--chip);
+    color:var(--muted); font-size:.78rem; line-height:1.4;
+  }
+  footer{text-align:center; color:var(--muted); font-size:.72rem; padding:20px 10px 30px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚗 RoadHelp</h1>
+  <p>Breakdown? Find a nearby workshop in seconds.</p>
+</header>
+
+<div class="wrap">
+  <div class="search-card">
+    <label for="city">Your city or area</label>
+    <input type="text" id="city" placeholder="e.g. Coimbatore, RS Puram" autocomplete="off">
+
+    <label for="issue">What's the problem?</label>
+    <select id="issue">
+      <option value="">Any / not sure</option>
+      <option value="tyre">Flat tyre / puncture</option>
+      <option value="battery">Battery / won't start</option>
+      <option value="engine">Engine trouble</option>
+      <option value="fuel">Out of fuel</option>
+      <option value="towing">Need a tow</option>
+      <option value="electrical">Electrical issue</option>
+      <option value="ac">AC not working</option>
+      <option value="accident">Accident / body damage</option>
+    </select>
+
+    <button class="search-btn" onclick="search()">Find Nearby Workshops</button>
+    <div class="sos">🆘 Life-threatening emergency? <a href="tel:112">Call 112</a></div>
+  </div>
+
+  <div id="metaLine" class="results-meta" style="display:none;"></div>
+  <div id="results"></div>
+
+  <div class="note">
+    <strong>Note:</strong> This demo shows sample workshop listings filtered by city name and issue type. To power it with real, live nearby workshops it should be connected to a maps/places data source (e.g. Google Places) on a proper backend — that integration isn't included in this preview yet.
+  </div>
+</div>
+
+<footer>RoadHelp · Roadside assistance directory</footer>
+
+<script>
+const WORKSHOPS = [
+  {name:"Speedy Tyre Point", city:"Coimbatore", addr:"RS Puram, Coimbatore", phone:"+919876500001", rating:4.6, tags:["tyre","towing"], hours:"24 hrs"},
+  {name:"Everstart Battery Care", city:"Coimbatore", addr:"Gandhipuram, Coimbatore", phone:"+919876500002", rating:4.3, tags:["battery","electrical"], hours:"7 AM - 11 PM"},
+  {name:"Precision Auto Works", city:"Coimbatore", addr:"Peelamedu, Coimbatore", phone:"+919876500003", rating:4.7, tags:["engine","electrical","ac"], hours:"9 AM - 8 PM"},
+  {name:"QuickTow Coimbatore", city:"Coimbatore", addr:"Avinashi Road, Coimbatore", phone:"+919876500004", rating:4.5, tags:["towing","accident"], hours:"24 hrs"},
+  {name:"Metro Fuel Rescue", city:"Coimbatore", addr:"Race Course, Coimbatore", phone:"+919876500005", rating:4.1, tags:["fuel","towing"], hours:"24 hrs"},
+  {name:"City Garage Chennai", city:"Chennai", addr:"T Nagar, Chennai", phone:"+919876500006", rating:4.4, tags:["engine","tyre"], hours:"8 AM - 10 PM"},
+  {name:"Bangalore Roadside Help", city:"Bangalore", addr:"Koramangala, Bangalore", phone:"+919876500007", rating:4.5, tags:["towing","battery","accident"], hours:"24 hrs"},
+  {name:"Bangalore Battery Hub", city:"Bangalore", addr:"Indiranagar, Bangalore", phone:"+919876500008", rating:4.2, tags:["battery","electrical"], hours:"7 AM - 9 PM"},
+  {name:"Madurai Motor Fix", city:"Madurai", addr:"Anna Nagar, Madurai", phone:"+919876500009", rating:4.0, tags:["engine","ac"], hours:"9 AM - 7 PM"},
+  {name:"Delhi Highway Rescue", city:"Delhi", addr:"NH-48, Delhi", phone:"+919876500010", rating:4.6, tags:["towing","accident","fuel"], hours:"24 hrs"},
+  {name:"Mumbai Tyre & Care", city:"Mumbai", addr:"Andheri, Mumbai", phone:"+919876500011", rating:4.3, tags:["tyre","battery"], hours:"8 AM - 10 PM"},
+  {name:"Hyderabad Auto Doctor", city:"Hyderabad", addr:"Madhapur, Hyderabad", phone:"+919876500012", rating:4.5, tags:["engine","electrical","ac"], hours:"24 hrs"}
+];
+
+function stars(r){
+  const full = Math.round(r);
+  return "★".repeat(full) + "☆".repeat(5-full) + " " + r.toFixed(1);
+}
+
+function search(){
+  const city = document.getElementById('city').value.trim().toLowerCase();
+  const issue = document.getElementById('issue').value;
+  const resultsEl = document.getElementById('results');
+  const metaEl = document.getElementById('metaLine');
+
+  let matches = WORKSHOPS.filter(w => !city || w.city.toLowerCase().includes(city) || w.addr.toLowerCase().includes(city));
+  let usedFallback = false;
+  if(matches.length === 0){
+    matches = WORKSHOPS;
+    usedFallback = true;
+  }
+  if(issue){
+    const filtered = matches.filter(w => w.tags.includes(issue));
+    if(filtered.length) matches = filtered;
+  }
+  matches = matches.slice().sort((a,b)=> b.rating - a.rating).slice(0,6);
+
+  metaEl.style.display = 'block';
+  metaEl.textContent = usedFallback && city
+    ? `No exact match for "${document.getElementById('city').value}" — showing top-rated workshops nearby instead.`
+    : `${matches.length} workshop${matches.length!==1?'s':''} found${city ? ' near "'+document.getElementById('city').value+'"' : ''}.`;
+
+  if(matches.length === 0){
+    resultsEl.innerHTML = `<div class="empty">No workshops found. Try a different city.</div>`;
+    return;
+  }
+
+  resultsEl.innerHTML = matches.map(w => `
+    <div class="card">
+      <div class="card-top">
+        <div>
+          <h3>${w.name}</h3>
+          <div class="meta-line">📍 ${w.addr}</div>
+          <div class="meta-line">🕑 ${w.hours}</div>
+        </div>
+        <div class="rating">${stars(w.rating)}</div>
+      </div>
+      <div class="tags">${w.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div class="actions">
+        <a class="call" href="tel:${w.phone}">📞 Call</a>
+        <a class="dir" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(w.addr)}" target="_blank" rel="noopener">🧭 Directions</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+// show all on load
+search();
+</script>
+</body>
+</html>
