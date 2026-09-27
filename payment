@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RoadHelp — Payment</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --card:#ffffff; --text:#1a1f24; --muted:#5b6672;
+    --accent:#e8542a; --accent-dark:#c8431e; --border:#e2e6ea; --chip:#eef1f4;
+    --success:#1d9e75;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171a; --card:#1e2226; --text:#eef1f4; --muted:#98a2ad;
+      --accent:#ff6a3d; --accent-dark:#e8542a; --border:#2c3136; --chip:#262b30;
+      --success:#5dcaa5;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171a; --card:#1e2226; --text:#eef1f4; --muted:#98a2ad;
+    --accent:#ff6a3d; --accent-dark:#e8542a; --border:#2c3136; --chip:#262b30;
+    --success:#5dcaa5;
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    min-height:100%;
+  }
+  header{
+    padding:22px 18px 18px; text-align:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+    color:#fff; padding-top:calc(22px + env(safe-area-inset-top,0px));
+    position:relative;
+  }
+  .back{position:absolute; left:14px; top:calc(22px + env(safe-area-inset-top,0px)); color:#fff; text-decoration:none; font-size:1.1rem;}
+  header h1{margin:0 0 4px; font-size:1.3rem;}
+  header p{margin:0; opacity:.9; font-size:.85rem;}
+  .wrap{max-width:640px; margin:0 auto; padding:16px;}
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:16px; margin-bottom:14px;
+  }
+  .workshop-row{display:flex; justify-content:space-between; align-items:center;}
+  .workshop-row h3{margin:0 0 3px; font-size:1rem;}
+  .workshop-row .meta{font-size:.8rem; color:var(--muted);}
+  .badge{background:var(--chip); color:var(--muted); font-size:.72rem; padding:4px 10px; border-radius:99px; white-space:nowrap;}
+
+  .bill-line{display:flex; justify-content:space-between; font-size:.88rem; padding:6px 0; color:var(--muted);}
+  .bill-line.total{border-top:1px solid var(--border); margin-top:6px; padding-top:10px; font-weight:700; color:var(--text); font-size:1rem;}
+
+  h2.section-title{font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); margin:0 0 10px;}
+
+  .method{
+    display:flex; align-items:center; gap:12px; padding:13px 12px; border:1px solid var(--border);
+    border-radius:10px; margin-bottom:10px; cursor:pointer; background:var(--bg);
+  }
+  .method input{accent-color:var(--accent); width:18px; height:18px;}
+  .method .icon{font-size:1.3rem;}
+  .method .label{font-size:.92rem; font-weight:600;}
+  .method .sub{font-size:.75rem; color:var(--muted);}
+  .method.selected{border-color:var(--accent); background:var(--chip);}
+
+  button.pay-btn{
+    width:100%; margin-top:6px; padding:13px; border:none; border-radius:9px;
+    background:var(--accent); color:#fff; font-size:1rem; font-weight:700; cursor:pointer;
+  }
+  button.pay-btn:active{background:var(--accent-dark);}
+  button.pay-btn:disabled{opacity:.5; cursor:not-allowed;}
+
+  .secure-note{display:flex; align-items:center; gap:6px; justify-content:center; margin-top:10px; font-size:.75rem; color:var(--muted);}
+
+  .success-screen{display:none; text-align:center; padding:30px 10px;}
+  .success-screen .check{
+    width:64px; height:64px; border-radius:50%; background:var(--success); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 16px;
+  }
+  .success-screen h2{margin:0 0 6px; font-size:1.2rem;}
+  .success-screen p{margin:0 0 20px; color:var(--muted); font-size:.9rem;}
+  .success-screen .ref{font-size:.8rem; color:var(--muted); margin-top:10px;}
+  .done-btn{
+    padding:11px 24px; border-radius:9px; border:1px solid var(--border);
+    background:var(--chip); color:var(--text); font-weight:600; text-decoration:none; display:inline-block; font-size:.9rem;
+  }
+
+  .note{
+    margin-top:6px; padding:12px 14px; border-radius:10px; background:var(--chip);
+    color:var(--muted); font-size:.76rem; line-height:1.4;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="index.html" aria-label="Back">←</a>
+  <h1>Complete payment</h1>
+  <p id="headerSub">Precision Auto Works · Engine trouble</p>
+</header>
+
+<div class="wrap">
+
+  <div id="paymentFlow">
+    <div class="card">
+      <div class="workshop-row">
+        <div>
+          <h3 id="wName">Precision Auto Works</h3>
+          <div class="meta" id="wAddr">Peelamedu, Coimbatore</div>
+        </div>
+        <span class="badge" id="wRating">★ 4.7</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">Bill summary</h2>
+      <div class="bill-line"><span>Service charge</span><span>₹450</span></div>
+      <div class="bill-line"><span>Parts / consumables</span><span>₹620</span></div>
+      <div class="bill-line"><span>Callout fee</span><span>₹150</span></div>
+      <div class="bill-line"><span>Tax (GST 18%)</span><span>₹220</span></div>
+      <div class="bill-line total"><span>Total</span><span id="totalAmt">₹1,440</span></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">Choose payment method</h2>
+
+      <label class="method" data-m="upi">
+        <input type="radio" name="pm" value="upi" checked>
+        <span class="icon">📱</span>
+        <span><span class="label">UPI</span><br><span class="sub">GPay, PhonePe, Paytm</span></span>
+      </label>
+
+      <label class="method" data-m="card">
+        <input type="radio" name="pm" value="card">
+        <span class="icon">💳</span>
+        <span><span class="label">Credit / Debit card</span><br><span class="sub">Visa, Mastercard, RuPay</span></span>
+      </label>
+
+      <label class="method" data-m="netbanking">
+        <input type="radio" name="pm" value="netbanking">
+        <span class="icon">🏦</span>
+        <span><span class="label">Net banking</span><br><span class="sub">All major banks</span></span>
+      </label>
+
+      <label class="method" data-m="cash">
+        <input type="radio" name="pm" value="cash">
+        <span class="icon">💵</span>
+        <span><span class="label">Cash on service</span><br><span class="sub">Pay the mechanic directly</span></span>
+      </label>
+
+      <button class="pay-btn" id="payBtn" onclick="pay()">Pay ₹1,440</button>
+      <div class="secure-note">🔒 Payments are encrypted and secure</div>
+    </div>
+
+    <div class="note">
+      <strong>Note:</strong> This is a demo payment screen — no real transaction is processed. To accept live payments this page needs to connect to a payment gateway (Razorpay, Stripe, PayU, etc.) through a backend.
+    </div>
+  </div>
+
+  <div id="successScreen" class="success-screen">
+    <div class="check">✓</div>
+    <h2>Payment successful</h2>
+    <p>Precision Auto Works has been notified and is on the way.</p>
+    <a class="done-btn" href="index.html">Back to home</a>
+    <div class="ref" id="refLine"></div>
+  </div>
+
+</div>
+
+<script>
+(function fillFromParams(){
+  const params = new URLSearchParams(window.location.search);
+  const name = params.get('name');
+  const addr = params.get('addr');
+  const rating = params.get('rating');
+  const issue = params.get('issue');
+
+  if(name){
+    document.getElementById('wName').textContent = name;
+    document.title = 'RoadHelp — Pay ' + name;
+  }
+  if(addr) document.getElementById('wAddr').textContent = addr;
+  if(rating) document.getElementById('wRating').textContent = '★ ' + rating;
+
+  const sub = [];
+  if(name) sub.push(name);
+  if(issue && issue.toLowerCase() !== 'any / not sure') sub.push(issue);
+  if(sub.length) document.getElementById('headerSub').textContent = sub.join(' · ');
+})();
+
+document.querySelectorAll('.method').forEach(m => {
+  m.addEventListener('click', () => {
+    document.querySelectorAll('.method').forEach(x => x.classList.remove('selected'));
+    m.classList.add('selected');
+  });
+});
+document.querySelector('.method[data-m="upi"]').classList.add('selected');
+
+function pay(){
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
+  setTimeout(() => {
+    document.getElementById('paymentFlow').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+    const ref = 'RH' + Math.floor(100000 + Math.random()*900000);
+    document.getElementById('refLine').textContent = 'Reference ID: ' + ref;
+  }, 1200);
+}
+</script>
+</body>
+</html>
